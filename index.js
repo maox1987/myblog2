@@ -27,6 +27,11 @@ app.use(session({
 
 app.use(flash())
 
+app.use(require('express-formidable')({
+  uploadDir: path.join(__dirname, 'public/img'),
+  keepExtensions: true
+}))
+
 app.locals.blog = {
   title: pkg.name,
   description: pkg.description
@@ -34,7 +39,7 @@ app.locals.blog = {
 
 app.use((req, res, next) => {
   res.locals.user = req.session.user
-  res.locals.usccess = req.flash('success').toString()
+  res.locals.success = req.flash('success').toString()
   res.locals.error = req.flash('error').toString()
   next()
 })
