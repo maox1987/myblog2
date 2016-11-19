@@ -1,6 +1,7 @@
 var express = require('express')
 var router = express.Router()
 var PostModel = require('../models/posts')
+var CommentModel = require('../models/comments')
 
 var checkLogin = require('../middlewares/check').checkLogin
 
@@ -64,16 +65,19 @@ router.get('/:postId', (req, res, next) => {
 
   Promise.all([
     PostModel.getPostById(postId),
+    CommentModel.getComments(postId),
     PostModel.incPv(postId)
   ])
   .then(result => {
     var post = result[0]
+    var comments = result[1]
     if (!post) {
       throw new Error('该文章不存在')
     }
 
     res.render('post', {
-      post: post
+      post: post,
+      comments: comments
     })
   })
   .catch(next) 
@@ -132,12 +136,35 @@ router.get('/:postId/remove', checkLogin, (req, res, next) => {
 
 // POST /posts/:postId/comment 创建一条留言
 router.post('/:postId/comment', checkLogin, (req, res, next) => {
-  res.send(req.flash())
+  var author = req.session.user._id
+  var postId = req.params.postId
+  var content = req.fields.content
+  var comment = {
+    author: author,
+    postId: postId,
+    content: content
+  }
+
+  CommentModel.create(comment)
+    .then(() => {
+      req.flash('success', '留言成功')
+
+      res.redirect('back')
+    })
+    .catch(next)
 })
 
 //GET /posts/:postId/comment/:commentId/remove 删除一条留言
 router.get('/:postId/comment/:commentId/remove', checkLogin, (req, res, next) => {
-  res.send(req.flash())
+  var commentId = req.params.commentId
+  var author = req.session.user._id
+
+  CommentModel.delCommentById(commentId, author)
+    .then(() => {
+      req.flash('success', '删除留言成功')
+      res.redirect('back')
+    })
+    .catch(next)
 })
 
 module.exports = router
