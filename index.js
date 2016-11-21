@@ -52,6 +52,10 @@ app.use((err, req, res, next) => {
   })
 })
 
-app.listen(config.port, () => {
-  console.log(`${pkg.name} listening on port ${config.port}`)
-})
+if (module.parent) {
+  module.exports = app
+} else {
+  app.listen(config.port, () => {
+    console.log(`${pkg.name} listening on port ${config.port}`)
+  })
+}
